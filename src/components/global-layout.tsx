@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Children, ReactNode } from "react";
+import { ReactNode } from "react";
 import style from "./global-layout.module.css";
 export default function GlobalLayout({children}:{
     children: ReactNode,

@@ -1,5 +1,4 @@
 import GlobalLayout from "@/components/global-layout";
-import SearchableLayout from "@/components/searchable-layout";
 import "@/styles/globals.css";
 import { NextPage } from "next";
 import type { AppProps } from "next/app";

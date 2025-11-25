@@ -1,19 +1,45 @@
 // import "./index.css" 오류
-import { ReactNode } from 'react'
+import { ReactNode, useEffect } from 'react'
 import style from './index.module.css'
 import SearchableLayout from '@/components/searchable-layout'
-import books from '@/mock/books.json' //@는 src를 가리킴 ts config에 나와있음.
+// import books from '@/mock/books.json' //@는 src를 가리킴 ts config에 나와있음.
 import BookItem from '@/components/book-item'
+import { InferGetStaticPropsType } from 'next'
+import fetchBooks from '@/lib/fetch-books'
+import fetchRandomBooks from '@/lib/fetch-random-books'
+import { BookData } from '@/types'
 
-export default function Home() {
+export const getStaticProps = async () => {
+  
+  console.log("인덱스 페이지"); // 빌드시 한번만 실행될 것
+
+  const [allBooks, recoBooks] = await Promise.all([ // 동시에 비동기함수 불러와서 조금더 렌더링 빨라짐.
+    fetchBooks(),
+    fetchRandomBooks(),
+  ])
+
+  return { // 이 데이터를 home 컴포넌트에 전달하게 설정하는 것. 
+    props: { // 반드시 getServerSideProps의 리턴값인 props는 객체타입의 props가 들어가 있어야 한다. 이건 프레임워크의 문법임 약속
+      allBooks,
+      recoBooks
+    },
+  }
+};
+
+export default function Home({allBooks, recoBooks}: InferGetStaticPropsType<typeof getStaticProps>) {
+  // window.location; // 이것도 오류
+  useEffect(() => {
+    console.log(window)
+  }, []); //컴포넌트가 마운트된 이후에 실행되기 떄문에 이렇게 오류 해결 가능하긴 함.
+
   return <div className={style.container}>
     <section>
       <h3>지금 추천하는 도서</h3>
-      {books.map((book)=><BookItem key={book.id} {...book}/>)}
+      {recoBooks.map((book:BookData) => <BookItem key={book.id} {...book} />)}
     </section>
     <section>
       <h3>등록된 모든 도서</h3>
-      {books.map((book)=><BookItem key={book.id} {...book}/>)}
+      {allBooks.map((book) => <BookItem key={book.id} {...book} />)}
     </section>
   </div>
 

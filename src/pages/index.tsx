@@ -23,6 +23,7 @@ export const getStaticProps = async () => {
       allBooks,
       recoBooks
     },
+    // revalidate : 3, // revalidate 재검증, 이 페이지를 3초마다 재검증. 3초 이후엔 새로운 페이지 반환
   }
 };
 

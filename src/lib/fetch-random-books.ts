@@ -1,5 +1,5 @@
 export default async function fetchRandomBooks(){
-    const url = `http://localhost:12345/book/random`;
+    const url = `https://onebite-books-server-main-ten-woad.vercel.app/book/random`;
 
     try{
         const response = await fetch(url);

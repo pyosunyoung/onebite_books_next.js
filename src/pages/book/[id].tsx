@@ -1,7 +1,9 @@
-import {GetStaticPropsContext, InferGetStaticPropsType } from "next";
+import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
 import style from "./[id].module.css"
 import fetchOneBook from "@/lib/fetch-one-book";
 import { useRouter } from "next/router";
+import Head from "next/head";
+import Image from "next/image";
 
 // import Image from "next/image";
 
@@ -19,53 +21,78 @@ import { useRouter } from "next/router";
 // }
 
 export const getStaticPaths = () => {
-    return{
-        paths : [
-            {params: {id : "1"}},
-            {params: {id : "2"}},
-            {params: {id : "3"}}
-        ],
-        fallback : true, //대체, 대비책, 보험
-    }// path book/4 즉 위에서 설정한 id에 일치하지 않을 때 fallback이 설정되고 위 아이디 처럼 1,2,3 페이지 제외 나머지 페이진 non found로 간주
+  return {
+    paths: [
+      { params: { id: "1" } },
+      { params: { id: "2" } },
+      { params: { id: "3" } }
+    ],
+    fallback: true, //대체, 대비책, 보험
+  }// path book/4 즉 위에서 설정한 id에 일치하지 않을 때 fallback이 설정되고 위 아이디 처럼 1,2,3 페이지 제외 나머지 페이진 non found로 간주
+}
+// fallback 옵션
+// fasle : 404 Notfound
+// blocking : SSR 방식
+// TRUE : SSR 방식 + 데이터가 없는 풀백 상태의 페이지부터 반환
+
+export const getStaticProps = async (context: GetStaticPropsContext) => {
+
+  const id = context.params!.id; // !는 있을 것이다.=> 애초에 페이지 자체가 param이 있어야 존재 가능한 페이지라 이렇게 설정.
+  const book = await fetchOneBook(Number(id));
+  console.log(id);
+
+  if (!book) { // 북 데이터가 없다면 => 404 페이지로 이동
+    return {
+      notFound: true,
+    }
+  }
+  return {
+    props: {
+      book
+    },
+  }
 }
 
-export const getStaticProps = async(context: GetStaticPropsContext) => {
 
-    const id = context.params!.id; // !는 있을 것이다.=> 애초에 페이지 자체가 param이 있어야 존재 가능한 페이지라 이렇게 설정.
-    const book = await fetchOneBook(Number(id));
-    console.log(id);
+export default function Page({ book }: InferGetStaticPropsType<typeof getStaticProps>) {
+  const router = useRouter();
+  if (router.isFallback) {
+    return ( // 페이지는 반환되었지만 데이터는 아직 안들어온 상태를 fallbakc상태라고 함.
+      <>
+        <Head>
+          <title>한입북스</title>
+          <meta property='og:image' content='/thumbnail.png' />
+          <meta property='og:title' content='한입북스' />
+          <meta property='og:description' content='한입 북스에 등록된 도서들을 만나보세요' />
+        </Head> 
+      </>
+    ) //fallback 상황이라도 meta태그 설정되어지게 조건문 설정.
+  }
 
-    if(!book){ // 북 데이터가 없다면 => 404 페이지로 이동
-        return{
-            notFound: true,
-        }
-    }
-    return{
-        props:{
-            book
-        },
-    }
-}
+  if (!book) return "문제가 발생했습니다 다시 시도하세요" // book 데이터가 null 일 수 있기 떄문에 그에 따른 예외처리
 
+  const { title, subTitle, description, author, publisher, coverImgUrl } = book;
 
-export default function Page({book}:InferGetStaticPropsType<typeof getStaticProps>) {
-    const router = useRouter();
-    if(router.isFallback) return "로딩중입니다." // 페이지는 반환되었지만 데이터는 아직 안들어온 상태를 fallbakc상태라고 함.
-    if(!book) return "문제가 발생했습니다 다시 시도하세요" // book 데이터가 null 일 수 있기 떄문에 그에 따른 예외처리
-    
-    const {title, subTitle, description, author, publisher, coverImgUrl } = book;
-
-    return <div className={style.container}>
-        <div className={style.cover_img_container} style={{backgroundImage: `url('${coverImgUrl}')`}}>
-            <img src={coverImgUrl} alt={title}/>
+  return (
+    <>
+      <Head>
+        <title>{title}</title>
+        <meta property='og:image' content={coverImgUrl} />
+        <meta property='og:title' content={title} />
+        <meta property='og:description' content={description} />
+      </Head>
+      <div className={style.container}>
+        <div className={style.cover_img_container} style={{ backgroundImage: `url('${coverImgUrl}')` }}>
+          <Image src={coverImgUrl} alt={title} width={272} height={349}  />
         </div>
         <div className={style.title}>{title}</div>
         <div className={style.subTitle}>{subTitle}</div>
         <div className={style.author}>
-            {author} | {publisher}
+          {author} | {publisher}
         </div>
         <div className={style.description}>{description}</div>
-    </div>
+      </div>
+    </>)
 }
 // 파일을 [...id]로 설정하면 쿼리값 여러개 설정가능 이렇게 설정 시 book/123/1/23/123 가능, book/ 불가능 범용적 경로 설정 가능
 // [[...id]].tsx optional catch all 세그먼트 => [[...id]] => book/ 없는 경로 설정 가능 , book/123/1~~이런것도 당옇니 가능

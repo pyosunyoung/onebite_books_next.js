@@ -1,17 +1,14 @@
-// import "./index.css" 오류
 import { ReactNode, useEffect } from 'react'
 import style from './index.module.css'
 import SearchableLayout from '@/components/searchable-layout'
-// import books from '@/mock/books.json' //@는 src를 가리킴 ts config에 나와있음.
 import BookItem from '@/components/book-item'
 import { InferGetStaticPropsType } from 'next'
 import fetchBooks from '@/lib/fetch-books'
 import fetchRandomBooks from '@/lib/fetch-random-books'
 import { BookData } from '@/types'
+import Head from 'next/head'
 
 export const getStaticProps = async () => {
-  
-  console.log("인덱스 페이지"); // 빌드시 한번만 실행될 것
 
   const [allBooks, recoBooks] = await Promise.all([ // 동시에 비동기함수 불러와서 조금더 렌더링 빨라짐.
     fetchBooks(),
@@ -27,22 +24,32 @@ export const getStaticProps = async () => {
   }
 };
 
-export default function Home({allBooks, recoBooks}: InferGetStaticPropsType<typeof getStaticProps>) {
+export default function Home({ allBooks, recoBooks }: InferGetStaticPropsType<typeof getStaticProps>) {
   // window.location; // 이것도 오류
   useEffect(() => {
     console.log(window)
   }, []); //컴포넌트가 마운트된 이후에 실행되기 떄문에 이렇게 오류 해결 가능하긴 함.
 
-  return <div className={style.container}>
-    <section>
-      <h3>지금 추천하는 도서</h3>
-      {recoBooks.map((book:BookData) => <BookItem key={book.id} {...book} />)}
-    </section>
-    <section>
-      <h3>등록된 모든 도서</h3>
-      {allBooks.map((book) => <BookItem key={book.id} {...book} />)}
-    </section>
-  </div>
+  return (
+    <>
+      <Head>
+        <title>한입북스</title>
+        <meta property='og:image' content='/thumbnail.png'/>
+        <meta property='og:title' content='한입북스'/>
+        <meta property='og:description' content='한입 북스에 등록된 도서들을 만나보세요'/>
+      </Head>
+      <div className={style.container}>
+        <section>
+          <h3>지금 추천하는 도서</h3>
+          {recoBooks.map((book: BookData) => <BookItem key={book.id} {...book} />)}
+        </section>
+        <section>
+          <h3>등록된 모든 도서</h3>
+          {allBooks.map((book) => <BookItem key={book.id} {...book} />)}
+        </section>
+      </div>
+    </>
+  )
 
 }
 

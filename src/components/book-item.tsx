@@ -11,7 +11,8 @@ export default function BookItem({
     coverImgUrl
 }: BookData) {
     return <Link href={`/book/${id}`} className={style.container}>
-        <img src={coverImgUrl} alt={title} />
+        <Image src={coverImgUrl} alt={title} width={80} height={104} />
+    
         <div>
             <div className={style.title}>{title}</div>
             <div className={style.subTitle}>{subTitle}</div>
